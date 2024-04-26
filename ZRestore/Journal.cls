@@ -34,7 +34,7 @@ ClassMethod RedirectTest() As %Status
         $$$ThrowOnError(jrnrest.RedirectDatabase(source,target))
 
         #; ジャーナルの整合性チェック
-	    set status=jrnrest.CheckJournalIntegrity(1) 
+	    $$$ThrowOnError(jrnrest.CheckJournalIntegrity(1)) 
 
         #; リストア実行
         $$$ThrowOnError(jrnrest.Run())
