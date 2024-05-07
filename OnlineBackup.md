@@ -31,15 +31,15 @@ InterSystems製品のデータベースには、サーバ側で記述したコ�
 
 - 最初のパス
 
-    全てのブロックのバックアップや、その時点で更新が発生したブロックを追跡し、バックアップ・ビットマップに記録し、全ブロックをバックアップします。
+    バックアップ開始時点で使用されているすべてのブロックをバックアップします。開始以降に更新が発生したブロックは、バックアップ・ビットマップに記録して次のパス以降でバックアップできるようにします。
 
 - 2番目～n番目のパス
 
-    前の処理以降に変更のあったブロックを処理します。このパスは変更ブロックが少なくなるまで実行されます。
+    バックアップ・ビットマップに記録された、前のパス開始以降に変更のあったブロックを処理します。このパスは変更ブロックが少なくなるまで実行されます。
 
 - 最後のパス
 
-    最後のパスが完了するまでの間、ライトデーモン（WRTDMN）を一時停止させます。
+    前のパス開始以降に変更のあったブロックを処理しますが、最後のパスが完了するまでの間ライトデーモン（WRTDMN）を一時停止させてこれ以上の更新が発生しないようにしてすべての更新を処理します。
 
 
 以下、2つのデータベースをデータベースリストに設定したときのフルバックアップ時のログです。
@@ -154,7 +154,7 @@ Backup complete.
 
 データベースのバックアップリストを作成する必要があります。
 
-作成は、管理ポータルから、またはAPIから作成できます。
+作成は、管理ポータルから、またはAPIから行えます。
 
 - 管理ポータルから作成する場合
 
@@ -429,7 +429,7 @@ Restore: 1. All directories
     参考ドキュメント：[^DBREST による選択したデータベースまたは名前を変更したデータベースのリストア](https://docs.intersystems.com/irisforhealthlatestj/csp/docbook/DocBook.UI.Page.cls?KEY=GCDI_backup#GCDI_backup_util_DBREST_select) 
 
 
-以下の例では、「2. Selected and/or renamed directories」を使用して、バックアップファイルに含まれるデータベースを選択肢、別ディレクトリのデータベースにリストアする手順を説明します。
+以下の例では、「2. Selected and/or renamed directories」を使用して、バックアップファイルに含まれるデータベースを選択し、別ディレクトリのデータベースにリストアする手順を説明します。
 
 #### リストア実行例（データベースディレクトリ変更）
 
@@ -539,6 +539,8 @@ set ^postbackup=1
 
 ![](/assets/Online-Ex-DBDelete.png)
 
+この削除時に **”チェックしたネームスペースを削除します” の T1 にチェックを入れてT1ネームスペースも削除します。**
+
 
 ##### 7、T1データベースを別ディレクトリ（/usr/irissys/mgr/t1rest）に再作成
 
@@ -578,7 +580,7 @@ Restore: 1. All directories
     1 => 2
 ```
 
-バックアップファイルに含まれるデータベースを選択肢、さらにディレクトリをリダイレクトしてリストアを実行するため、2を選択します。
+バックアップファイルに含まれるデータベースを選択し、さらにディレクトリをリダイレクトしてリストアを実行するため、2を選択します。
 
 続いて以下質問されます。
 ```
@@ -588,6 +590,8 @@ prevented from running during the restore? Yes =>
 リストア実行中`switch 10`を設定したいか？と聞かれています。`switch 10`を設定すると**カレントプロセス以外の他のプロセスからのRead／Writeを禁止します。**
 
 リストア実行中に他プロセスからのデータ参照・更新を防ぎたいときはYes（デフォルト）を指定します。（推奨）
+
+>この回答をYesにした場合、リストアが完了するまで管理ポータルを使用したり、新規のログインなどはできなくなります。
 
 続いて、バックアップファイルを指定します。管理ポータルからバックアップを行ったため、バックアップ履歴より直近のフルバックアップファイル名を表示しています。ディレクトリに変更がないか確認し正しい場合ははEnterを押下します。
 
@@ -618,7 +622,7 @@ Is this the backup you want to start restoring? Yes =>
 
 次に、もう１つのバックアップ対象である`/usr/irissys/mgr/user`のディレクトリが表示されます。リストア対象外に設定したいので、X（大文字）を入力します。
 
-ディレクトリリストを変更したか？と質問されるので、変更不要の場合は、Noを入力します。
+「(ここまで入力した)ディレクトリリストを変更したいか？」と質問されるので、変更不要の場合は、Noを入力します。
 
 ```
 For each database included in the backup file, you can:
@@ -667,13 +671,19 @@ Starting skip of /usr/irissys/mgr/user/.
 
 ```
 
-さらにバックアップファイルがあるか確認されます。ない場合は STOP を入力します。
+今回のバックアップファイルに続きがあるかどうか確認されます。ない場合は STOP を入力します。
 ```
 Specify input file for volume 1 of backup following APR 26 2024  11:36AM
  (Type STOP to exit)
 Device: STOP
 ```
-リストアしたいバックアップファイルがあるか再度確認されます。ある場合はYES（デフォルト）ない場合は、Noを入力します。
+リストアしたいバックアップファイルがあるか再度確認されます。
+
+利用例として、フルバックアップをリストア後に続けてインクリメンタル（差分）バックアップがあり、続けてリストアしたい場合にファイル名を指定できます。
+
+リストアしたいファイルがある場合はYES（デフォルト）、ない場合は、Noを入力します。
+
+
 ```
 Do you have any more backups to restore? Yes => no
 Mounting /usr/irissys/mgr/t1rest/
@@ -754,7 +764,7 @@ Restore the Journal? Yes => Yes
 ```
 Process all journaled globals in all directories? no
 ```
-別のOSで作成されたジャーナルファイルを使用するか質問されます。使用しない場合はNoを入力します。
+リストアしようとしているジャーナルファイルが別のOSで作成されたものかどうか質問されます。今回は同じマシンで作成されたものなのでNoを入力します。
 ```
 Are journal files imported from a different operating system? No => No
 ```
@@ -792,7 +802,8 @@ Are journal files created by this InterSystems IRIS instance and located in thei
 ```
 次に、どのジャーナルファイルをリストア対象とするか指定します。ファイル名が不明な場合は ? を入力するとリストを出します。リストから選択することもできます。（例では、First fileとFinal fileが同一ですが問題ありません）
 
-最終行の質問で、次のファイルがある場合はYesを入力しない場合はnoを入力します。
+最終行の質問は、ひとつのジャーナルファイルのリストアが完了して次のジャーナルファイルをリストアする前にプロンプト(入力待ち)をするかどうかです。自動的に指定したすべてのジャーナルファイルをリストアする場合は no を入力します。
+
 ```
 Specify range of files to process
 
@@ -849,7 +860,7 @@ Journaling switched to /usr/irissys/mgr/journal/20240426.003
 ```
 ジャーナルリストア中のジャーナルを無効化したいか質問されています。デフォルトのYes（無効化）を選択します。
 
-※ミラーリングを利用している場合は無効化を選択せず、リストア中のジャーナルを他メンバーに転送し摘用することで全メンバーのリストアが自動的に完了させることもできます。
+※ミラーリングを利用している場合は無効化を選択せず、リストア中のジャーナルを他メンバーに転送し適用することで全メンバーのリストアが自動的に完了させることもできます。
 ```
 You may disable journaling of updates for faster restore for all
 databases other than mirrored databases. You may not want to do this
@@ -1007,7 +1018,7 @@ Option?
 
     以下の実行例は、`/usr/irissys/mgr/t1` で記録されていた情報を `/usr/irissys/mgr/t1rest` にリストアしています。
 
-    このラベル名からのジャーナルリストは、リダイレクト先が指定できません。以下の例では、バックアップからのリストアだけで終了するようにしています。
+    このラベル名からのジャーナルリストアは、リダイレクト先が指定できません。以下の例では、バックアップからのリストアだけで終了するようにしています。
 
     例では、以下の引数を指定します。
     - 第1引数：1を指定（非インタラクティブモードであることを指定）
@@ -1073,54 +1084,7 @@ Option?
 
 サンプルコード：[ZRestore.Journal](/ZRestore/Journal.cls)
 
-メソッド、プロパティの使い方についてはコメント文をご確認ください。
-```
-    set jrnrest=##class(Journal.Restore).%New()
-
-    #;リストアのジャーナルファイルを指定します
-    #; CurrentFileは以下メソッドで取得可
-    #; ##class(%SYS.Journal.System).GetCurrentFile().Name
-    set jrnrest.FirstFile="/usr/irissys/mgr/journal/20240426.002"
-    #;LastFileの指定がない場合は最後のファイルまでリストアします
-    set jrnrest.LastFile="/usr/irissys/mgr/journal/20240426.002"
-
-    #;ジャーナルディレクトリの設定（カレントインスタンスのジャーナルを利用する場合の例）
-    #; UseJournalLocation()　ジャーナルディレクトリを指定するメソッド
-    #; 現在のプライマリディレクトリの場所を指定する場合は、メソッドで場所を特定できる
-    set location1=##class(%SYS.Journal.System).GetPrimaryDirectory()
-    do jrnrest.UseJournalLocation(location1)
-    set location2=##class(%SYS.Journal.System).GetAlternateDirectory()
-    do jrnrest.UseJournalLocation(location2)
-
-    #; ソースDBとターゲットDBの指定
-    #; ディレクトリは全て小文字で記載する＋末尾のパスのマーク必須
-    set source="/usr/irissys/mgr/t1/"
-    set target="/usr/irissys/mgr/t1rest/"
-    #; リストア対象データベースの指定
-    //$$$ThrowOnError(jrnrest.SelectUpdates(source))
-    set status=jrnrest.SelectUpdates(source)
-    if $system.Status.IsError(status) {
-        write $system.Status.GetErrorText(status)
-    }
-    #; リダイレクト先の指定 
-    //$$$ThrowOnError(jrnrest.RedirectDatabase(source,target))
-    set status=jrnrest.RedirectDatabase(source,target)
-    if $system.Status.IsError(status) {
-        write $system.Status.GetErrorText(status)
-    }
-    #; ジャーナルの整合性チェック
-    //$$$ThrowOnError(jrnrest.CheckJournalIntegrity(1))
-    set status=jrnrest.CheckJournalIntegrity(1) 
-    if $system.Status.IsError(status) {
-        write $system.Status.GetErrorText(status)
-    }
-    #; リストア実行
-    //$$$ThrowOnError(jrnrest.Run())
-    set status=jrnrest.Run()
-    if $system.Status.IsError(status) {
-        write $system.Status.GetErrorText(status)
-    }
-```
+メソッド、プロパティの使い方についてはサンプルコードのコメント文をご確認ください。
 
 サンプルコード：[ZRestore.Journal](/ZRestore/Journal.cls)実行例
 ```
