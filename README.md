@@ -19,13 +19,13 @@ InterSystems製品のバックアップ方法として以下の4種類の方法�
 
     > バージョン2024.1以降では、実験的機能として[オンラインバックアップの高速化機能](https://docs.intersystems.com/irisforhealthlatest/csp/docbook/DocBook.UI.Page.cls?KEY=HXIHRN_new20241#HXIHRN_new20241_speedscalesec_fob)を提供しています。
 
-- [コールド・バックアップ](https://docs.intersystems.com/irisforhealthlatestj/csp/docbook/DocBook.UI.Page.cls?KEY=GCDI_backup#GCDI_backup_methods_ext_cold)
-
-    InterSystems製品を停止できる場合に利用できる方法で手順がシンプルです。
-
 - [並行外部バックアップ](https://docs.intersystems.com/irisforhealthlatestj/csp/docbook/DocBook.UI.Page.cls?KEY=GCDI_backup#GCDI_backup_methods_ext_concurrent)
 
     データベースファイル（DATファイル）の退避（ファイルコピーのような対退避方法も含）とオンライン・バックアップを組み合わせて利用する方法で、外部バックアップで使用するスナップショットのようなテクノロジが利用できない環境に対して素早くバックアップを取得できる方法です。（オンラインバックアップより高速にバックアップを実行できますが、手順は複雑です。）
+
+- [コールド・バックアップ](https://docs.intersystems.com/irisforhealthlatestj/csp/docbook/DocBook.UI.Page.cls?KEY=GCDI_backup#GCDI_backup_methods_ext_cold)
+
+    InterSystems製品を停止できる場合に利用できる方法で手順がシンプルです。
 
 本シリーズ記事では、それぞれのバックアップ方法とリストア方法を解説していきますが、その前に **バックアップを取得する前に必ず確認しておきたい事** があります。
 
@@ -182,4 +182,5 @@ No Errors were found.
 
 - [外部バックアップ](/ExternalBackup.md)
 - [オンラインバックアップ](/OnlineBackup.md)
-- [並行外部バックアップ](/)
+- [並行外部バックアップ](/ConcurretExternalBackup.md)
+- [コールドバックアップ](/ColdBackup.md)
